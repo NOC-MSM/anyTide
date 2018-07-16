@@ -778,7 +778,7 @@ def get_port():
 
 	return lat,lon, z0, data
 ##########################################################################
-def get_harmonic_arr(varstr):
+def get_harmonic_arr(varstr='SSH'):
 	"""
 	Get gridded harmonics and coordinate data.
 	Get associated harmonic constituent labels and doodson numbers
@@ -806,8 +806,17 @@ def get_harmonic_arr(varstr):
 	lat_arr = fD2.variables['nav_lat_grid_T'][:]
 	lon_arr = fD2.variables['nav_lon_grid_T'][:]
 	[ny,nx] = np.shape(lat_arr)
-
-	data_arr = np.zeros((nh,ny,nx),dtype=complex)
+	
+	# Test for the dimensionality of the requested data (could pass as a variable). Initialise target array
+	var_shape =  np.shape(fD2.variables['M2x_' + varstr][:])
+	if len(var_shape) == 3:
+		[nz,ny,nx] = var_shape
+		data_arr =  np.zeros((nh,nz,ny,nx) ,dtype=complex)
+	elif len(var_shape) == 2:
+		[ny,nx] = var_shape
+		data_arr =  np.zeros((nh,ny,nx) ,dtype=complex)
+	else:
+		print 'Panic!!'
 
 	#for iconst in range(6,7): # M2 only
 	for iconst in range(nh):
@@ -825,7 +834,12 @@ def get_harmonic_arr(varstr):
 		
 		print 'available: ', constit_list[iconst]
 		constit = constit_list[iconst]
-		data_arr[iconst,:,:]  = fileh.variables[constit+'x_' + varstr][:] + 1.j*fileh.variables[constit+'y_' + varstr][:]
+		tmp_arr  = fileh.variables[constit+'x_' + varstr][:] + 1.j*fileh.variables[constit+'y_' + varstr][:]
+		print 'size of data: {}'.format( len(np.shape(tmp_arr)) )
+		if len(np.shape(tmp_arr)) == 3: # 3D data
+			data_arr[iconst,:,:,:]  = tmp_arr
+		if len(np.shape(tmp_arr)) == 2: # 2D data
+			data_arr[iconst,:,:]  = tmp_arr
 	
 	fD1.close()
 	fD2.close()
