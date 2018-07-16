@@ -778,10 +778,20 @@ def get_port():
 
 	return lat,lon, z0, data
 ##########################################################################
-def get_map():
+def get_harmonic_arr(varstr):
 	"""
 	Get gridded harmonics and coordinate data.
 	Get associated harmonic constituent labels and doodson numbers
+	INPUT:
+	varstr - name of harmonic variable to extract. STRING
+	RETURN:
+	lat - array of latitudes [ny,nx]
+	lon - array of longitudes [ny,nx]
+	data - array of COMPLEX harmonic constituents [nh,ny,nx] 
+	doodson_list - a list of Doodson number that are available [nh]
+	constit_list - the corresponding list of harmonic constituent labels [nh]
+
+	In this example the data are stored in variables like M2x_SSH and M2y_SSH for the real and imaginary parts of the M2 SSH harmonic
 	"""
 	dirname = '/projectsa/pycnmix/jelt/AMM60/'
 	[ constit_list, period_list, doodson_list ] = ITh.harmonictable(dirname+'../harmonics_list.txt', doodson=True)
@@ -789,18 +799,38 @@ def get_map():
 	print doodson_list
 	print constit_list
 	nh = len(constit_list)
-	f = Dataset(dirname + 'AMM60_1d_20120801_20120831_D2_Tides.nc')
+	fD1 = Dataset(dirname + 'AMM60_1d_20120801_20120831_D1_Tides.nc')
+	fD2 = Dataset(dirname + 'AMM60_1d_20120801_20120831_D2_Tides.nc')
+	fD4 = Dataset(dirname + 'AMM60_1d_20120801_20120831_D4_Tides.nc')
 
-	lat_arr = f.variables['nav_lat_grid_T'][:]
-	lon_arr = f.variables['nav_lon_grid_T'][:]
+	lat_arr = fD2.variables['nav_lat_grid_T'][:]
+	lon_arr = fD2.variables['nav_lon_grid_T'][:]
 	[ny,nx] = np.shape(lat_arr)
 
 	data_arr = np.zeros((nh,ny,nx),dtype=complex)
 
-	for iconst in range(6,7):
+	#for iconst in range(6,7): # M2 only
+	for iconst in range(nh):
+
+		# Get the harmonic file handle - verbose method for transparancy.
+		if constit_list[iconst][-1] == '1':
+			fileh = fD1
+		elif constit_list[iconst][-1] == '2':
+			fileh = fD2 
+		elif constit_list[iconst][-1] == '4':
+			fileh = fD4
+		else:
+			print '{}: Not ready for that harmonic species band'.format(constit_list[iconst])
+		
+		
 		print 'available: ', constit_list[iconst]
 		constit = constit_list[iconst]
-		data_arr[iconst,:,:]  = f.variables[constit+'x_SSH'][:] + 1.j*f.variables[constit+'y_SSH'][:]
+		data_arr[iconst,:,:]  = fileh.variables[constit+'x_' + varstr][:] + 1.j*fileh.variables[constit+'y_' + varstr][:]
+	
+	fD1.close()
+	fD2.close()
+	fD4.close()
+
 	return lat_arr, lon_arr, data_arr, doodson_list, constit_list
 
 ##########################################################################
@@ -883,7 +913,7 @@ def test_dataarray(xcoords, ycoords, mjd):
 		can be single value arrays for a point location
 	"""
 	# Obtain data
-	lats, lons, data, doodson_list, constit_list = get_map()
+	lats, lons, data, doodson_list, constit_list = get_harmonic_arr('SSH')
 
 	# Find indices for specified coordinates
 	[J_ll,I_ll] = ITh.findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
@@ -1005,11 +1035,15 @@ if __name__ == '__main__':
 
 
 	## Compute reconstuction on port data.
+	#####################################
 	ssh = test_port(mjd)
 	print 'plot time series reconstruction of port data'
 	plot_port(dates, ssh)
 
+
+
 	## Compute reconstruction on model data (1D or 2D)
+	##################################################
 	ycoords = [49.5, 51]; xcoords = [-3, 2] # Slice on Channel 49.5N : 51N, -3E : 2E
 	#ycoords = [53.5, 53.5]; xcoords = [-3.1, -3.1] # Nr Liverpool
 	#ycoords = [43,63]; xcoords = [-13,13] # Whole domain
