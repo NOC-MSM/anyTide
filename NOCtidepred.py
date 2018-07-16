@@ -823,7 +823,7 @@ def date2mjd(dates):
 
     return mjd
 ##########################################################################
-def test_port():
+def test_port(mjd):
     """
     Demonstration to load, reconstruct and plot port data.
     """
@@ -872,20 +872,11 @@ def test_port():
 
     print 'prediction values: {}'.format(pred)
 
-    # Plot sea level time series
-    plt.figure()
-    #plt.plot([mjd[i] for i in range(npred)],[z0 + ssh[i] for i in range(npred)],'+-')
-    plt.plot(dates,[ssh[i] for i in range(npred)],'+-')
-    plt.ylabel('Height (m)')
-    plt.xlabel('Time since '+startdate.strftime("%Y-%m-%d"))
-    #plt.xlim([mjd[0],mjd[-1]])
-    plt.show()
-
-    return
+    return ssh
 
 
 ##########################################################################
-def test_dataarray(xcoords, ycoords):
+def test_dataarray(xcoords, ycoords, mjd):
 	"""
 	INPUTS: xcoords : [49.5, 51]
 		ycoords : [-3, 2]
@@ -953,42 +944,44 @@ def test_dataarray(xcoords, ycoords):
 
 	print np.shape(ssh)
 
-	## Plot output
-	# Check dimension of output and either plot timeseries or map
-	if len(np.shape(ssh)) > 1: # map
-
-	    ssh = np.nanmax(pred,axis=0)
-	    ssh = np.ma.masked_where( ssh > 1E6, ssh)
-
-	    # fix for spurious lat value at zero
-	    lat_sub[ lat_sub == 0 ] = np.nan
-
-	    plt.figure()
-	    plt.pcolormesh(lon_sub,lat_sub,ssh)
-	    plt.clim([0, np.floor(np.nanmax(ssh)) ])
-	    plt.xlim(xcoords)
-	    plt.ylim(ycoords)
-	    plt.colorbar(extend='max')
-	    plt.title('max SSH over 24 hours [m]')
-	    plt.xlabel('longitude'), plt.ylabel('latitude')
-
-	    print datetime.datetime.now() - startTime
-
-	    plt.show()
-
-	else:
-	    ssh = np.ma.masked_where( ssh > 1E6, ssh)
-	    # Plot sea level time series
-	    plt.figure()
-	    #plt.plot([mjd[i] for i in range(npred)],[z0 + ssh[i] for i in range(npred)],'+-')
-	    plt.plot(dates,[ssh[i] for i in range(npred)],'+-')
-	    plt.ylabel('Height (m)')
-	    plt.xlabel('Time since '+startdate.strftime("%Y-%m-%d"))
-	    #plt.xlim([mjd[0],mjd[-1]])
-	    plt.show()
 
 
+	return lat_sub, lon_sub, ssh
+
+##########################################################################
+def plot_map(dates, lat_sub, lon_sub, ssh):
+
+	ssh = np.ma.masked_where( ssh > 1E6, ssh)
+
+	# fix for spurious lat value at zero
+	lat_sub[ lat_sub == 0 ] = np.nan
+
+	plt.figure()
+	plt.pcolormesh(lon_sub,lat_sub,ssh)
+	plt.clim([0, np.floor(np.nanmax(ssh)) ])
+	plt.xlim(xcoords)
+	plt.ylim(ycoords)
+	plt.colorbar(extend='max')
+	plt.title('max SSH over 24 hours [m]')
+	plt.xlabel('longitude'), plt.ylabel('latitude')
+
+	print datetime.datetime.now() - startTime
+
+	plt.show()
 	return
+
+##########################################################################
+def plot_port(dates, ssh):
+    ssh = np.ma.masked_where( ssh > 1E6, ssh)
+
+    # Plot sea level time series
+    plt.figure()
+    plt.plot(dates,[ssh[i] for i in range(npred)],'+-')
+    plt.ylabel('Height (m)')
+    plt.xlabel('Time since '+startdate.strftime("%Y-%m-%d"))
+    plt.show()
+
+    return
 
 ##################################################################################
 ##################################################################################
@@ -1012,14 +1005,20 @@ if __name__ == '__main__':
 
 
 	## Compute reconstuction on port data.
-	test_port()
-
-
+	ssh = test_port(mjd)
+	print 'plot time series reconstruction of port data'
+	plot_port(dates, ssh)
 
 	## Compute reconstruction on model data (1D or 2D)
 	ycoords = [49.5, 51]; xcoords = [-3, 2] # Slice on Channel 49.5N : 51N, -3E : 2E
 	#ycoords = [53.5, 53.5]; xcoords = [-3.1, -3.1] # Nr Liverpool
 	#ycoords = [43,63]; xcoords = [-13,13] # Whole domain
 
-	test_dataarray(xcoords, ycoords)
-
+	[lat_sub, lon_sub, ssh] = test_dataarray(xcoords, ycoords, mjd)
+	if len(np.shape(ssh)) > 1: # mapa
+		print 'plot max over 24hours'
+		ssh = np.squeeze(np.nanmax(ssh, axis=0))
+		plot_map(dates, lat_sub, lon_sub, ssh)
+	else:
+		print 'plot time series reconstruction of point data'
+		plot_port(dates, ssh)
