@@ -20,7 +20,7 @@ import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
 
-import anyTide_Cwrapper
+#import anyTide_Cwrapper
 
 # Additional for map reconstruction
 from netCDF4 import Dataset
@@ -770,7 +770,7 @@ def get_port():
 	...
 	"""
 
-	data = pd.read_csv('glad.txt', header=2, delimiter=r"\s+")
+	data = pd.read_csv('anyTide_Cwrapper/glad.txt', header=2, delimiter=r"\s+")
 	data.columns = ['amp','pha', 'doo', 'lab']
 	lat = +(53+27.0/60)
 	lon = -(03+01.1/60)
@@ -1012,7 +1012,7 @@ if __name__ == '__main__':
 
 
 	## Compute reconstuction on port data.
-	#test_port()
+	test_port()
 
 
 
