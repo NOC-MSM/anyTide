@@ -778,6 +778,17 @@ def get_port():
 
 	return lat,lon, z0, data
 ##########################################################################
+def get_coord_indices(ycoords,xcoords,lats,lons):
+	# Find indices for specified coordinates
+	[J_ll,I_ll] = ITh.findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
+	[J_ur,I_ur] = ITh.findJI(max(ycoords), max(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
+	J1 = min(J_ll,J_ur)
+	J2 = max(J_ll,J_ur)+1
+	I1 = min(I_ll,I_ur)
+	I2 = max(I_ll,I_ur)+1
+
+	return J1,J2,I1,I2
+##########################################################################
 def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 	"""
 	Get gridded harmonics and coordinate data.
@@ -808,16 +819,10 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 	fD2 = Dataset(dirname + 'AMM60_1d_20120801_20120831_D2_Tides.nc')
 	fD4 = Dataset(dirname + 'AMM60_1d_20120801_20120831_D4_Tides.nc')
 
-	lats = fD2.variables['nav_lat_grid_T'][:]
-	lons = fD2.variables['nav_lon_grid_T'][:]
-
-	# Find indices for specified coordinates
-	[J_ll,I_ll] = ITh.findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
-	[J_ur,I_ur] = ITh.findJI(max(ycoords), max(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
-	J1 = min(J_ll,J_ur)
-	J2 = max(J_ll,J_ur)+1
-	I1 = min(I_ll,I_ur)
-	I2 = max(I_ll,I_ur)+1
+	# Find indices for specified coordinates. Need full domain to find indices
+	lats_full = fD2.variables['nav_lat_grid_T'][:]
+	lons_full = fD2.variables['nav_lon_grid_T'][:]
+	[J1,J2,I1,I2] = get_coord_indices(ycoords,xcoords,lats_full,lons_full)
 
 	# Load in subdomain
 	lat_arr = fD2.variables['nav_lat_grid_T'][J1:J2,I1:I2]
@@ -826,11 +831,11 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 	[ny,nx] = np.shape(lat_arr)
 
 	# Test for the dimensionality of the requested data (could pass as a variable). Initialise target array
-	var_shape =  np.shape(fD2.variables['M2x_' + varstr][:])
-	if len(var_shape) == 3:
-		nz = var_shape[0]
+	var_full_shape =  np.shape(fD2.variables['M2x_' + varstr][:])
+	if len(var_full_shape) == 3:
+		nz = var_full_shape[0]
 		data_arr =  np.zeros((nh,nz,ny,nx) ,dtype=complex)
-	elif len(var_shape) == 2:
+	elif len(var_full_shape) == 2:
 		data_arr =  np.zeros((nh,ny,nx) ,dtype=complex)
 	else:
 		print 'Panic!!'
@@ -853,9 +858,9 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 		constit = constit_list[iconst]
 		#tmp_arr  = fileh.variables[constit+'x_' + varstr][...,ny,nx] + 1.j*fileh.variables[constit+'y_' + varstr][...,ny,nx]
 	
-		if len(var_shape) == 3: # 3D data
+		if len(var_full_shape) == 3: # 3D data
 			data_arr[iconst,:,:,:]  =  fileh.variables[constit+'x_' + varstr][:,J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][:,J1:J2,I1:I2]
-		if len(var_shape) == 2: # 2D data
+		if len(var_full_shape) == 2: # 2D data
 			data_arr[iconst,:,:]  =  fileh.variables[constit+'x_' + varstr][J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][J1:J2,I1:I2]
 	print 'size of data: {}'.format( len(np.shape(data_arr)) )	
 	fD1.close()
@@ -944,20 +949,7 @@ def test_dataarray(xcoords, ycoords, mjd):
 		can be single value arrays for a point location
 	"""
 	# Obtain data
-	lats, lons, data, doodson_list, constit_list = get_harmonic_arr('SSH',xcoords,ycoords)
-
-	# Find indices for specified coordinates
-	[J_ll,I_ll] = ITh.findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
-	[J_ur,I_ur] = ITh.findJI(max(ycoords), max(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
-	J1 = min(J_ll,J_ur)
-	J2 = max(J_ll,J_ur)+1
-	I1 = min(I_ll,I_ur)
-	I2 = max(I_ll,I_ur)+1
-
-	lat_sub = lats #[J1:J2,I1:I2]
-	lon_sub = lons #[J1:J2,I1:I2]
-	data_sub = data #[:,J1:J2,I1:I2]
-
+	lat_sub, lon_sub, data_sub, doodson_list, constit_list = get_harmonic_arr('SSH',xcoords,ycoords)
 	[nh, ny, nx] = np.shape(data_sub)
 
 	Ha = np.abs(data_sub)
