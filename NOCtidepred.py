@@ -18,6 +18,7 @@ import numpy as np
 import math # atan2
 import pandas as pd
 import datetime
+from os import path # fix the path
 import matplotlib.pyplot as plt
 
 #import anyTide_Cwrapper
@@ -771,7 +772,9 @@ def get_port():
 	...
 	"""
 
-	data = pd.read_csv('anyTide_Cwrapper/glad.txt', header=2, delimiter=r"\s+")
+        fname =  path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper/glad.txt"))
+
+	data = pd.read_csv(fname, header=2, delimiter=r"\s+")
 	data.columns = ['amp','pha', 'doo', 'lab']
 	lat = +(53+27.0/60)
 	lon = -(03+01.1/60)
@@ -894,6 +897,7 @@ def test_port(mjd):
     """
     Demonstration to load, reconstruct and plot port data.
     """
+    rad = np.pi / 180.
     # Obtain data
     lat, lon, z0, data = get_port()
     ha = data['amp'][:]
@@ -1027,12 +1031,12 @@ def plot_map(dates, lat_sub, lon_sub, ssh):
 ##########################################################################
 def plot_port(dates, ssh):
     ssh = np.ma.masked_where( ssh > 1E6, ssh)
-
+    
     # Plot sea level time series
     plt.figure()
-    plt.plot(dates,[ssh[i] for i in range(npred)],'+-')
+    plt.plot(dates,[ssh[i] for i in range(len(dates))],'+-')
     plt.ylabel('Height (m)')
-    plt.xlabel('Time since '+startdate.strftime("%Y-%m-%d"))
+    plt.xlabel('Time since '+dates[0].strftime("%Y-%m-%d"))
     plt.show()
 
     return
