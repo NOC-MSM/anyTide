@@ -83,8 +83,8 @@ def set_names_phases():
              '2MSK8','4MS10', '3M2S10', '4MSN12', '5MS12', '4M2S12', 'MVS2', '2MK2',
              'MA2',  'MB2', 'MSV2', 'SKM2', '2MNS4', 'MV4', '3MN4', '2MSN4', 'NA2',
              'NB2',  'MSO5', 'MSK5', '2MN2']
-
-    return names, sig0
+	
+    return names, np.array(sig0) # transform sig0 from a 'list' into an 'array'
 
 ##########################################################################
 def phamp0fast(mjdn):
