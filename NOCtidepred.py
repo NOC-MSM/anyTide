@@ -25,9 +25,10 @@ import matplotlib.pyplot as plt
 # Additional for map reconstruction
 from netCDF4 import Dataset
 import sys
-sys.path.insert(0, "/login/jelt/python/ipynb/NEMO/")
-import internaltideharmonics_NEMO as ITh
-
+sys.path.insert(0, "../DEV_jelt/NEMO_diag/")
+#import internaltideharmonics_NEMO as ITh
+from AMM60_tools import findJI
+from AMM60_tools import harmonictable
 
 ##########################################################################
 ## Functions
@@ -780,8 +781,8 @@ def get_port():
 ##########################################################################
 def get_coord_indices(ycoords,xcoords,lats,lons):
 	# Find indices for specified coordinates
-	[J_ll,I_ll] = ITh.findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
-	[J_ur,I_ur] = ITh.findJI(max(ycoords), max(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
+	[J_ll,I_ll] = findJI(min(ycoords), min(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
+	[J_ur,I_ur] = findJI(max(ycoords), max(xcoords), lats, lons)  # Simple routine to find the nearest J,I coordinates for given lat lon
 	J1 = min(J_ll,J_ur)
 	J2 = max(J_ll,J_ur)+1
 	I1 = min(I_ll,I_ur)
@@ -810,8 +811,8 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 	In this example the data are stored in variables like M2x_SSH and M2y_SSH for the real and imaginary parts of the M2 SSH harmonic
 	"""
 	dirname = '/projectsa/pycnmix/jelt/AMM60/'
-	[ constit_list, period_list, doodson_list ] = ITh.harmonictable(dirname+'../harmonics_list.txt', doodson=True)
-	#[ constit_list, period_list ] = ITh.harmonictable(dirname+'../harmonics_list.txt')
+	[ constit_list, period_list, doodson_list ] = harmonictable(dirname+'../harmonics_list.txt', doodson=True)
+	#[ constit_list, period_list ] = harmonictable(dirname+'../harmonics_list.txt')
 	print doodson_list
 	print constit_list
 	nh = len(constit_list)
