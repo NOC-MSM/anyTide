@@ -793,17 +793,19 @@ def get_coord_indices(ycoords,xcoords,lats,lons):
 
 	return J1,J2,I1,I2
 ##########################################################################
-def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
+def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coords='deg'):
 	"""
 	Get gridded harmonics and coordinate data.
 	Get associated harmonic constituent labels and doodson numbers
 	INPUT:
-	varstr - name of harmonic variable to extract. STRINa
-	xcoords, ycoords e.g.:
+	varstr - name of harmonic variable to extract. STRING
+	coords = 'deg' - input xcoords and ycoords are latitude and longitude
+		e.g.:
 		ycoords = [49.5, 51]; xcoords = [-3, 2] # Slice on Channel 49.5N : 51N, -3E : 2E
 	        #ycoords = [53.5, 53.5]; xcoords = [-3.1, -3.1] # Nr Liverpool
 		#ycoords = [43,63]; xcoords = [-13,13] # Whole domain
-	ycoords
+	coords = 'ind' - input xcoords and ycoords are indices
+
 	RETURN:
 	lat - array of latitudes [ny,nx]
 	lon - array of longitudes [ny,nx]
@@ -826,7 +828,12 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5]):
 	# Find indices for specified coordinates. Need full domain to find indices
 	lats_full = fD2.variables['nav_lat_grid_T'][:]
 	lons_full = fD2.variables['nav_lon_grid_T'][:]
-	[J1,J2,I1,I2] = get_coord_indices(ycoords,xcoords,lats_full,lons_full)
+	
+	if coords = 'deg':
+		[J1,J2,I1,I2] = get_coord_indices(ycoords,xcoords,lats_full,lons_full)
+	else:
+		J1,J2 = ycoords
+		I1,I2 = xcoords
 
 	# Load in subdomain
 	lat_arr = fD2.variables['nav_lat_grid_T'][J1:J2,I1:I2]
