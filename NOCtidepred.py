@@ -829,7 +829,7 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	lats_full = fD2.variables['nav_lat_grid_T'][:]
 	lons_full = fD2.variables['nav_lon_grid_T'][:]
 	
-	if coords = 'deg':
+	if coords == 'deg':
 		[J1,J2,I1,I2] = get_coord_indices(ycoords,xcoords,lats_full,lons_full)
 	else:
 		J1,J2 = ycoords
