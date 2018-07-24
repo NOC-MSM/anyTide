@@ -793,7 +793,7 @@ def get_coord_indices(ycoords,xcoords,lats,lons):
 
 	return J1,J2,I1,I2
 ##########################################################################
-def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coordsType='deg', dirname='/projectsa/pycnmix/jelt/AMM60/',filebase='AMM60_1d_20120801_20120831_'):
+def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coordsType='deg', dirname='/projectsa/pycnmix/jelt/AMM60/',filebase='AMM60_1d_20120801_20120831'):
 	"""
 	Get gridded harmonics and coordinate data.
 	Get associated harmonic constituent labels and doodson numbers
@@ -821,9 +821,9 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	print doodson_list
 	print constit_list
 	nh = len(constit_list)
-	fD1 = Dataset(dirname + filebase + 'D1_Tides.nc')
-	fD2 = Dataset(dirname + filebase + 'D2_Tides.nc')
-	fD4 = Dataset(dirname + filebase + 'D4_Tides.nc')
+	fD1 = Dataset(dirname + filebase + '_D1_Tides.nc')
+	fD2 = Dataset(dirname + filebase + '_D2_Tides.nc')
+	fD4 = Dataset(dirname + filebase + '_D4_Tides.nc')
 
 	# Find indices for specified coordinates. Need full domain to find indices
 	lats_full = fD2.variables['nav_lat_grid_T'][:]
