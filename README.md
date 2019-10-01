@@ -11,3 +11,9 @@ Conversion of NOCtidepred.m (from sdwil@noc.ac.uk) into python.
 Demonstration for 1D port and 2D model tidal reconstruction.
 16 July 2018 - jelt@noc.ac.uk
 
+Oban_demo.py
+============
+
+Demonstration for Oban tides (tested in python2.7):
+$python Oban_demo.py
+
