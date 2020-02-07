@@ -755,12 +755,11 @@ def vsetfast(s,h,p,p1):
 
 ##########################################################################
 def get_port():
-
 	"""
 	Obtain a reduced number of Gladstone harmonics from a file
-    Returns: lat, lon [floats]
-             z0 (ref height) [float]
-             data (amp, pha, doo, labels) [pandas dataframe]
+	Returns: lat, lon [floats]
+		z0 (ref height) [float]
+		data (amp, pha, doo, labels) [pandas dataframe]
 
 	$ head glad.txt
 
@@ -771,15 +770,15 @@ def get_port():
 	0.97800   4.70000   36 S2
 	...
 	"""
-
-        fname =  path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper/glad.txt"))
-
+	
+	fname = path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper/glad.txt"))
+	
 	data = pd.read_csv(fname, header=2, delimiter=r"\s+")
 	data.columns = ['amp','pha', 'doo', 'lab']
 	lat = +(53+27.0/60)
-	lon = -(03+01.1/60)
+	lon = -( 3+ 1.1/60)
 	z0  = +5.249
-
+	
 	return lat,lon, z0, data
 ##########################################################################
 def get_coord_indices(ycoords,xcoords,lats,lons):
@@ -818,12 +817,17 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	#dirname = '/projectsa/pycnmix/jelt/AMM60/'
 	[ constit_list, period_list, doodson_list ] = harmonictable(dirname+'../harmonics_list.txt', doodson=True)
 	#[ constit_list, period_list ] = harmonictable(dirname+'../harmonics_list.txt')
-	print doodson_list
-	print constit_list
+	print(doodson_list)
+	print(constit_list)
 	nh = len(constit_list)
-	fD1 = Dataset(dirname + filebase + '_D1_Tides.nc')
-	fD2 = Dataset(dirname + filebase + '_D2_Tides.nc')
-	fD4 = Dataset(dirname + filebase + '_D4_Tides.nc')
+	try:
+		fD1 = Dataset(dirname + filebase + '_D1_Tides.nc')
+		fD2 = Dataset(dirname + filebase + '_D2_Tides.nc')
+		fD4 = Dataset(dirname + filebase + '_D4_Tides.nc')
+	except:# AMM7 does not have separate files for harmonic groups
+		fD1 = Dataset(dirname + filebase + '_Tides.nc')
+		fD2 = fD1
+		fD4 = fD1
 
 	# Find indices for specified coordinates. Need full domain to find indices
 	lats_full = fD2.variables['nav_lat_grid_T'][:]
@@ -849,7 +853,7 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	elif len(var_full_shape) == 2:
 		data_arr =  np.zeros((nh,ny,nx) ,dtype=complex)
 	else:
-		print 'Panic!!'
+		print('Panic!!')
 
 	#for iconst in range(6,7): # M2 only
 	for iconst in range(nh):
@@ -862,10 +866,10 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 		elif constit_list[iconst][-1] == '4':
 			fileh = fD4
 		else:
-			print '{}: Not ready for that harmonic species band'.format(constit_list[iconst])
+			print('{}: Not ready for that harmonic species band'.format(constit_list[iconst]))
 		
 		
-		print 'available: ', constit_list[iconst]
+		print('available: ', constit_list[iconst])
 		constit = constit_list[iconst]
 		#tmp_arr  = fileh.variables[constit+'x_' + varstr][...,ny,nx] + 1.j*fileh.variables[constit+'y_' + varstr][...,ny,nx]
 	
@@ -873,11 +877,14 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 			data_arr[iconst,:,:,:]  =  fileh.variables[constit+'x_' + varstr][:,J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][:,J1:J2,I1:I2]
 		if len(var_full_shape) == 2: # 2D data
 			data_arr[iconst,:,:]  =  fileh.variables[constit+'x_' + varstr][J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][J1:J2,I1:I2]
-	print 'size of data: {}'.format( len(np.shape(data_arr)) )	
-	fD1.close()
-	fD2.close()
-	fD4.close()
-
+	print('size of data: {}'.format( len(np.shape(data_arr)) ))	
+	try:
+		fD1.close()
+		fD2.close()
+		fD4.close()
+	except:
+		print('Close harmonic files. Assuming that there was only one file')
+		pass
 	return lat_arr, lon_arr, data_arr, doodson_list, constit_list
 
 ##########################################################################
@@ -901,56 +908,56 @@ def date2mjd(dates):
     return mjd
 ##########################################################################
 def test_port(mjd):
-    """
-    Demonstration to load, reconstruct and plot port data.
-    """
-    rad = np.pi / 180.
-    # Obtain data
-    lat, lon, z0, data = get_port()
-    ha = data['amp'][:]
-    ga = data['pha'][:]
-    doo = data['doo'][:]
-    lab = data['lab'][:]
-    nh = len(ha)
+	"""
+	Demonstration to load, reconstruct and plot port data.
+	"""
+	rad = np.pi / 180.
+	# Obtain data
+	lat, lon, z0, data = get_port()
+	ha = data['amp'][:]
+	ga = data['pha'][:]
+	doo = data['doo'][:]
+	lab = data['lab'][:]
+	nh = len(ha)
 
-    # Initialise output variable
-    npred = np.shape(mjd)[0]            # vector: [npred]
-    pred = np.zeros(npred)
+	# Initialise output variable
+	npred = np.shape(mjd)[0]            # vector: [npred]
+	pred = np.zeros(npred)
 
-    # Get the nodal corrections
-    mjdns = np.floor(mjd)       # vector: [npred]
-    hrs = 24 * (mjd - mjdns)   # hrs are the time variable required for the reconstruction. vector: [npred]
-    [f,v] = phamp0fast(mjdns)  # [npred,120]
-    print 'shape of f,v {}'.format(np.shape(f))
-    print 'shape of hrs time series {}'.format(np.shape(hrs))
+	# Get the nodal corrections
+	mjdns = np.floor(mjd)       # vector: [npred]
+	hrs = 24 * (mjd - mjdns)   # hrs are the time variable required for the reconstruction. vector: [npred]
+	[f,v] = phamp0fast(mjdns)  # [npred,120]
+	print('shape of f,v {}'.format(np.shape(f)))
+	print('shape of hrs time series {}'.format(np.shape(hrs)))
 
-    # load the phase speeds and harmonic names for 120 harmonics
-    names, sig0 = set_names_phases()
+	# load the phase speeds and harmonic names for 120 harmonics
+	names, sig0 = set_names_phases()
 
-    #
-    # Sum constant + constituents to give prediction
-    #
+	#
+	# Sum constant + constituents to give prediction
+	#
 
-    for j in range(nh):
-        """
-        Need to match up input harmonics with tabulated harmonic. Can pair by names,
-        or by doodson number (i.e. index). The former is preferable but there are
-        issues with spelling conventions.
-        """
-        #k = names.index(lab[j].upper()) # This is the index of the harmonic from vector sig0, of speeds
-        k = doo[j]-1 # offset since indexing starts from zero
-        print names[k], lab[j]
-    ## Port
-        pred = pred + ha[j] * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
-    ## Map
-    #    pred = pred + ha(j+1) * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
+	for j in range(nh):
+		"""
+		Need to match up input harmonics with tabulated harmonic. Can pair by names,
+		or by doodson number (i.e. index). The former is preferable but there are
+		issues with spelling conventions.
+		"""
+		#k = names.index(lab[j].upper()) # This is the index of the harmonic from vector sig0, of speeds
+		k = doo[j]-1 # offset since indexing starts from zero
+		print(names[k], lab[j])
+		## Port
+		pred = pred + ha[j] * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
+		## Map
+		#    pred = pred + ha(j+1) * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
 
-    print 'shape of prediction {}'.format(np.shape(pred))
-    ssh = pred + z0
+	print('shape of prediction {}'.format(np.shape(pred)))
+	ssh = pred + z0
 
-    print 'prediction values: {}'.format(pred)
+	print('prediction values: {}'.format(pred))
 
-    return ssh
+	return ssh
 
 
 ##########################################################################
@@ -976,8 +983,8 @@ def test_dataarray(xcoords, ycoords, mjd):
 	mjdns = np.floor(mjd)       # vector: [npred]
 	hrs = 24 * (mjd - mjdns)   # hrs are the time variable required for the reconstruction. vector: [npred]
 	[f,v] = phamp0fast(mjdns)  # [npred,120]
-	print 'shape of f,v {}'.format(np.shape(f))
-	print 'shape of hrs time series {}'.format(np.shape(hrs))
+	print('shape of f,v {}'.format(np.shape(f)))
+	print('shape of hrs time series {}'.format(np.shape(hrs)))
 
 	# load the phase speeds and harmonic names for 120 harmonics
 	names, sig0 = set_names_phases()
@@ -994,7 +1001,7 @@ def test_dataarray(xcoords, ycoords, mjd):
 	    """
 	    #k = names.index(lab[j].upper()) # This is the index of the harmonic from vector sig0, of speeds
 	    k = doodson_list[j]-1 # offset since indexing starts from zero
-	    print names[k] #, constit_list[j]
+	    print(names[k]) #, constit_list[j]
 	    ## Port
 	    #pred = pred + ha[j] * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
 	    ## Map
@@ -1007,7 +1014,7 @@ def test_dataarray(xcoords, ycoords, mjd):
 
 	ssh = np.squeeze(pred)
 
-	print np.shape(ssh)
+	print(np.shape(ssh))
 
 
 
@@ -1030,7 +1037,7 @@ def plot_map(dates, lat_sub, lon_sub, ssh):
 	plt.title('max SSH over 24 hours [m]')
 	plt.xlabel('longitude'), plt.ylabel('latitude')
 
-	print datetime.datetime.now() - startTime
+	print(datetime.datetime.now() - startTime)
 
 	plt.show()
 	return
@@ -1072,7 +1079,7 @@ if __name__ == '__main__':
 	## Compute reconstuction on port data.
 	#####################################
 	ssh = test_port(mjd)
-	print 'plot time series reconstruction of port data'
+	print('plot time series reconstruction of port data')
 	plot_port(dates, ssh)
 
 
@@ -1085,9 +1092,9 @@ if __name__ == '__main__':
 
 	[lat_sub, lon_sub, ssh] = test_dataarray(xcoords, ycoords, mjd)
 	if len(np.shape(ssh)) > 1: # mapa
-		print 'plot max over 24hours'
+		print('plot max over 24hours')
 		ssh = np.squeeze(np.nanmax(ssh, axis=0))
 		plot_map(dates, lat_sub, lon_sub, ssh)
 	else:
-		print 'plot time series reconstruction of point data'
+		print('plot time series reconstruction of point data')
 		plot_port(dates, ssh)
