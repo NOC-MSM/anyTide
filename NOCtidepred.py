@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 # Additional for map reconstruction
 from netCDF4 import Dataset
 import sys
-sys.path.insert(0, "../DEV_jelt/NEMO_diag/")
+sys.path.insert(0, "../DEV_jelt/NEMO_diag/IT/")
 #import internaltideharmonics_NEMO as ITh
 from AMM60_tools import findJI
 from AMM60_tools import harmonictable
@@ -85,7 +85,7 @@ def set_names_phases():
              '2MSK8','4MS10', '3M2S10', '4MSN12', '5MS12', '4M2S12', 'MVS2', '2MK2',
              'MA2',  'MB2', 'MSV2', 'SKM2', '2MNS4', 'MV4', '3MN4', '2MSN4', 'NA2',
              'NB2',  'MSO5', 'MSK5', '2MN2']
-	
+
     return names, np.array(sig0) # transform sig0 from a 'list' into an 'array'
 
 ##########################################################################
@@ -770,15 +770,15 @@ def get_port():
 	0.97800   4.70000   36 S2
 	...
 	"""
-	
+
 	fname = path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper/glad.txt"))
-	
+
 	data = pd.read_csv(fname, header=2, delimiter=r"\s+")
 	data.columns = ['amp','pha', 'doo', 'lab']
 	lat = +(53+27.0/60)
 	lon = -( 3+ 1.1/60)
 	z0  = +5.249
-	
+
 	return lat,lon, z0, data
 ##########################################################################
 def get_coord_indices(ycoords,xcoords,lats,lons):
@@ -808,7 +808,7 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	RETURN:
 	lat - array of latitudes [ny,nx]
 	lon - array of longitudes [ny,nx]
-	data - array of COMPLEX harmonic constituents [nh,ny,nx] 
+	data - array of COMPLEX harmonic constituents [nh,ny,nx]
 	doodson_list - a list of Doodson number that are available [nh]
 	constit_list - the corresponding list of harmonic constituent labels [nh]
 
@@ -832,7 +832,7 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 	# Find indices for specified coordinates. Need full domain to find indices
 	lats_full = fD2.variables['nav_lat_grid_T'][:]
 	lons_full = fD2.variables['nav_lon_grid_T'][:]
-	
+
 	if coordsType == 'deg':
 		[J1,J2,I1,I2] = get_coord_indices(ycoords,xcoords,lats_full,lons_full)
 	else:
@@ -862,22 +862,22 @@ def get_harmonic_arr(varstr='SSH',xcoords=[-3.1, -3.1],ycoords=[53.5, 53.5], coo
 		if constit_list[iconst][-1] == '1':
 			fileh = fD1
 		elif constit_list[iconst][-1] == '2':
-			fileh = fD2 
+			fileh = fD2
 		elif constit_list[iconst][-1] == '4':
 			fileh = fD4
 		else:
 			print('{}: Not ready for that harmonic species band'.format(constit_list[iconst]))
-		
-		
+
+
 		print('available: ', constit_list[iconst])
 		constit = constit_list[iconst]
 		#tmp_arr  = fileh.variables[constit+'x_' + varstr][...,ny,nx] + 1.j*fileh.variables[constit+'y_' + varstr][...,ny,nx]
-	
+
 		if len(var_full_shape) == 3: # 3D data
 			data_arr[iconst,:,:,:]  =  fileh.variables[constit+'x_' + varstr][:,J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][:,J1:J2,I1:I2]
 		if len(var_full_shape) == 2: # 2D data
 			data_arr[iconst,:,:]  =  fileh.variables[constit+'x_' + varstr][J1:J2,I1:I2] + 1.j*fileh.variables[constit+'y_' + varstr][J1:J2,I1:I2]
-	print('size of data: {}'.format( len(np.shape(data_arr)) ))	
+	print('size of data: {}'.format( len(np.shape(data_arr)) ))
 	try:
 		fD1.close()
 		fD2.close()
@@ -1045,7 +1045,7 @@ def plot_map(dates, lat_sub, lon_sub, ssh):
 ##########################################################################
 def plot_port(dates, ssh):
     ssh = np.ma.masked_where( ssh > 1E6, ssh)
-    
+
     # Plot sea level time series
     plt.figure()
     plt.plot(dates,[ssh[i] for i in range(len(dates))],'+-')

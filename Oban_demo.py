@@ -49,7 +49,7 @@ def get_port():
         data = pd.read_csv(fname, header=3, delimiter=r"\s+")
         data.columns = ['amp','pha', 'doo']
         lat = +(56+25/60)
-        lon = -(05+29/60)
+        lon = -( 5+29/60)
         z0  = +2.402
 
         return lat,lon, z0, data
@@ -75,8 +75,8 @@ def test_port(mjd):
     mjdns = np.floor(mjd)       # vector: [npred]
     hrs = 24 * (mjd - mjdns)   # hrs are the time variable required for the reconstruction. vector: [npred]
     [f,v] = phamp0fast(mjdns)  # [npred,120]
-    print 'shape of f,v {}'.format(np.shape(f))
-    print 'shape of hrs time series {}'.format(np.shape(hrs))
+    print('shape of f,v {}'.format(np.shape(f)))
+    print('shape of hrs time series {}'.format(np.shape(hrs)))
 
     # load the phase speeds and harmonic names for 120 harmonics
     names, sig0 = set_names_phases()
@@ -98,10 +98,10 @@ def test_port(mjd):
     ## Map
     #    pred = pred + ha(j+1) * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
 
-    print 'shape of prediction {}'.format(np.shape(pred))
+    print('shape of prediction {}'.format(np.shape(pred)))
     ssh = pred + z0
 
-    print 'prediction values: {}'.format(pred)
+    print('prediction values: {}'.format(pred))
 
     return ssh
 
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     ## Compute reconstuction on port data.
     #####################################
     ssh = test_port(mjd) # reconstuct ssh for the time vector
-    print 'plot time series reconstruction of port data'
+    print('plot time series reconstruction of port data')
 
     ssh = np.ma.masked_where( ssh > 1E6, ssh) # get rid of nasties
 

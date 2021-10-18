@@ -14,6 +14,6 @@ Demonstration for 1D port and 2D model tidal reconstruction.
 Oban_demo.py
 ============
 
-Demonstration for Oban tides (tested in python2.7):
+Demonstration for Oban tides (tested in python3.8 18 Oct 2021):
 $python Oban_demo.py
 
