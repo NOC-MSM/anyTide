@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
 
     # Set the dates
-    # Create a vector of predictions times. E.g. 24 hourly instants. 
+    # Create a vector of predictions times. E.g. 24 hourly instants.
     startdate = UtcNow()
     npred = 24
     dates = [startdate + datetime.timedelta(hours=hh) for hh in range(0, npred)]
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     ax.set_ylabel('Height (m)')
     ax.set_xlabel('Hours since '+dates[0].strftime("%Y-%m-%d"))
     ax.set_title('Oban tide prediction')
-    
+
     # Pain plotting time on the x-axis
     myFmt = mdates.DateFormatter('%H')
     ax.xaxis.set_major_formatter(myFmt)

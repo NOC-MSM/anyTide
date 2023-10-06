@@ -754,32 +754,79 @@ def vsetfast(s,h,p,p1):
     return v
 
 ##########################################################################
-def get_port():
-	"""
-	Obtain a reduced number of Gladstone harmonics from a file
-	Returns: lat, lon [floats]
-		z0 (ref height) [float]
-		data (amp, pha, doo, labels) [pandas dataframe]
+def get_port(site_file_name="glad.txt"):
+    """
+    Obtain a reduced number of Gladstone harmonics from a file
+    Returns: lat, lon [floats]
+        z0 (ref height) [float]
+        data (amp, pha, doo, labels) [pandas dataframe]
 
-	$ head glad.txt
+    $ head glad.txt
 
-	Port Name: ENGLAND, WEST COAST $ LIVERPOOL (GLADSTONE DOCK)
-	53 27.0 N 03 01.1 W
-	z0=  5.249   OD= -4.930
-	3.03800 320.72000   31 M2
-	0.97800   4.70000   36 S2
-	...
-	"""
+    Port Name: ENGLAND, WEST COAST $ LIVERPOOL (GLADSTONE DOCK)
+    53 27.0 N 03 01.1 W
+    z0=  5.249   OD= -4.930
+    3.03800 320.72000   31 M2
+    0.97800   4.70000   36 S2
+    ...
+    """
 
-	fname = path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper/glad.txt"))
+    fname = path.abspath(path.join(path.dirname(__file__), "anyTide_Cwrapper", site_file_name))
+    if site_file_name == "glad.txt":
+        data = pd.read_csv(fname, header=2, names=['amp', 'pha', 'doo', 'lab'], delimiter=r"\s+")
+        lat = +(53 + 27.0 / 60)
+        lon = -(3 + 1.1 / 60)
+        z0 = +5.249
 
-	data = pd.read_csv(fname, header=2, delimiter=r"\s+")
-	data.columns = ['amp','pha', 'doo', 'lab']
-	lat = +(53+27.0/60)
-	lon = -( 3+ 1.1/60)
-	z0  = +5.249
+    elif site_file_name == "gladstone.txt":
+        data = pd.read_csv(fname, header=2, names=['amp', 'pha', 'doo', 'lab'], delimiter=r"\s+")
+        lat = +(53+27.0/60)
+        lon = -( 3+ 1.1/60)
+        z0  = +5.249
 
-	return lat,lon, z0, data
+    elif site_file_name == "lowerlargo.txt":
+        data = pd.read_csv(fname, header=2, names=['amp', 'pha', 'doo', 'lab'], delimiter=r"\s+")
+        lat = 56.2
+        lon = -2.925
+        z0  = +3.1475328
+
+    elif site_file_name == "dartmouth.txt":
+        data = pd.read_csv(fname, header=3, delimiter=r"\s+")
+        data.columns = ['amp','pha', 'doo']
+        data["lab"] = "empty"
+        lat = +(50+21./60)
+        lon = -(3+34./60)
+        z0  = +2.930
+
+    elif site_file_name == "exmouth.txt":
+        data = pd.read_csv(fname, header=3, delimiter=r"\s+")
+        data.columns = ['amp','pha', 'doo']
+        data["lab"] = "empty"
+        lat = 50.6167
+        lon = -1.830
+        z0  = +2.106
+
+    elif site_file_name == "poole.txt":
+        data = pd.read_csv(fname, header=3, delimiter=r"\s+")
+        data.columns = ['amp','pha', 'doo']
+        data["lab"] = "empty"
+        lat =+(50+43./60)
+        lon = -(1+59./60)
+        z0  = +1.50
+
+    elif site_file_name == "weymouth.txt":
+        data = pd.read_csv(fname, header=3, delimiter=r"\s+")
+        data.columns = ['amp','pha', 'doo', 'label']
+        data["lab"] = "empty"
+        lat = +(50+36.5/60)
+        lon = -( 2+ 26.9/60)
+        z0  = +1.166
+
+
+    else:
+        print(f'Do not recognise file: {site_file_name}')
+
+    return lat,lon, z0, data
 ##########################################################################
 def get_coord_indices(ycoords,xcoords,lats,lons):
 	# Find indices for specified coordinates
@@ -907,13 +954,13 @@ def date2mjd(dates):
 
     return mjd
 ##########################################################################
-def test_port(mjd):
+def test_port(mjd, site_file_name="glad.txt"):
 	"""
 	Demonstration to load, reconstruct and plot port data.
 	"""
 	rad = np.pi / 180.
 	# Obtain data
-	lat, lon, z0, data = get_port()
+	lat, lon, z0, data = get_port(site_file_name)
 	ha = data['amp'][:]
 	ga = data['pha'][:]
 	doo = data['doo'][:]
@@ -946,7 +993,10 @@ def test_port(mjd):
 		"""
 		#k = names.index(lab[j].upper()) # This is the index of the harmonic from vector sig0, of speeds
 		k = doo[j]-1 # offset since indexing starts from zero
-		print(names[k], lab[j])
+		try:
+			print(names[k], lab[j])
+		except:
+			print("Issue with displaying name and label")
 		## Port
 		pred = pred + ha[j] * f[:,k] * np.cos(rad * ( sig0[k]*hrs + v[:,k] - ga[j] ))
 		## Map
@@ -1062,39 +1112,42 @@ def plot_port(dates, ssh):
 ##################################################################################
 if __name__ == '__main__':
 
-	# Settings
-	rad    = np.pi/180
-	deg    = 1.0 / rad
+    # Settings
+    rad    = np.pi/180
+    deg    = 1.0 / rad
 
-	startTime = datetime.datetime.now() # For a timing test
-
-
-	# Set the dates
-	startdate = UtcNow()
-	npred = 24
-	dates = [startdate + datetime.timedelta(hours=hh) for hh in range(0, npred)]
-	mjd = date2mjd( dates ) # convert to modified julian dates
+    startTime = datetime.datetime.now() # For a timing test
 
 
-	## Compute reconstuction on port data.
-	#####################################
-	ssh = test_port(mjd)
-	print('plot time series reconstruction of port data')
-	plot_port(dates, ssh)
+    # Set the dates
+    startdate = UtcNow()
+    npred = 24
+    dates = [startdate + datetime.timedelta(hours=hh) for hh in range(0, npred)]
+    mjd = date2mjd( dates ) # convert to modified julian dates
 
 
+    ## Compute reconstuction on port data.
+    #####################################
+    ssh = test_port(mjd, site_file_name="glad.txt")
 
-	## Compute reconstruction on model data (1D or 2D)
-	##################################################
-	ycoords = [49.5, 51]; xcoords = [-3, 2] # Slice on Channel 49.5N : 51N, -3E : 2E
-	#ycoords = [53.5, 53.5]; xcoords = [-3.1, -3.1] # Nr Liverpool
-	#ycoords = [43,63]; xcoords = [-13,13] # Whole domain
+    print('plot time series reconstruction of port data')
+    plot_port(dates, ssh)
 
-	[lat_sub, lon_sub, ssh] = test_dataarray(xcoords, ycoords, mjd)
-	if len(np.shape(ssh)) > 1: # mapa
-		print('plot max over 24hours')
-		ssh = np.squeeze(np.nanmax(ssh, axis=0))
-		plot_map(dates, lat_sub, lon_sub, ssh)
-	else:
-		print('plot time series reconstruction of point data')
-		plot_port(dates, ssh)
+
+    try:
+        ## Compute reconstruction on model data (1D or 2D)
+        ##################################################
+        ycoords = [49.5, 51]; xcoords = [-3, 2] # Slice on Channel 49.5N : 51N, -3E : 2E
+        #ycoords = [53.5, 53.5]; xcoords = [-3.1, -3.1] # Nr Liverpool
+        #ycoords = [43,63]; xcoords = [-13,13] # Whole domain
+
+        [lat_sub, lon_sub, ssh] = test_dataarray(xcoords, ycoords, mjd)
+        if len(np.shape(ssh)) > 1: # mapa
+            print('plot max over 24hours')
+            ssh = np.squeeze(np.nanmax(ssh, axis=0))
+            plot_map(dates, lat_sub, lon_sub, ssh)
+        else:
+            print('plot time series reconstruction of point data')
+            plot_port(dates, ssh)
+    except:
+        pass
