@@ -822,9 +822,30 @@ def get_port(site_file_name="glad.txt"):
         lon = -( 2+ 26.9/60)
         z0  = +1.166
 
-
     else:
-        print(f'Do not recognise file: {site_file_name}')
+        """
+        lowerlargo src:inspect_data.py
+        56.2N -2.925E
+        z0= 3.1475328
+        1.6769674 52.812855 31 M2
+        ...
+        """
+        try:
+            f = open(fname)
+            site_file_name = f.readline().strip('\n')
+            position_str = f.readline().strip('\n').split(' ')
+            lat = float(position_str[0].strip('N'))
+            lon = float(position_str[1].strip('E'))
+            z0 = float(f.readline().strip('\n').split(' ')[1])
+
+            data = pd.read_csv(f, delimiter=r"\s+", names=['amp', 'pha', 'dood', 'lab'])
+            data = pd.read_csv(fname, header=2,
+                               delimiter=r"\s+",
+                               names=['amp', 'pha', 'doo', 'lab'])
+
+
+        except:
+            print(f'Problem with file: {site_file_name}')
 
     return lat,lon, z0, data
 ##########################################################################
@@ -1129,6 +1150,7 @@ if __name__ == '__main__':
     ## Compute reconstuction on port data.
     #####################################
     ssh = test_port(mjd, site_file_name="glad.txt")
+    #ssh = test_port(mjd, site_file_name="lowerlargo_v2.txt")
 
     print('plot time series reconstruction of port data')
     plot_port(dates, ssh)
