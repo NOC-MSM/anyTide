@@ -35,13 +35,14 @@ class dataset:
     """
 
     def __init__(self, file_path: str = "/Users/jelt/DATA/anyTide/all_constit.txt"):
-        """Init anyTide data object
+        """Init anyTide data object. Load data file
 
         Args:
             file_path (str) : path of data file
         """
         print(f"Creating a new {print(self)}")
         self.read_data(file_path)
+        print(f"Loaded {file_path}.\nStations: {len(self.lat)}")
 
 
     def read_data(self, file_path: str) -> None:
@@ -132,18 +133,18 @@ class dataset:
             label = input("Enter station name: ")
 
         # Creating pandas dataframe from numpy array
-        df = pd.DataFrame({'A': tt.amp[index, :],
-                            'G': tt.pha[index, :],
-                            'K': tt.dood[index, :],
+        df = pd.DataFrame({'A': self.amp[index, :],
+                            'G': self.pha[index, :],
+                            'K': self.dood[index, :],
                             #'lat': tt.lat[index],
                             #'lon': tt.lon[index],
                             #'dep': tt.dep[index]
                            })
 
-        # construct a list of constituent names from Doodson numbers
+        # construct a list of constituent names from Doodson numbers. To be added as a column.
         names = []
-        for i in range(np.shape(tt.dood[index, :])[0]):
-            names.append(tt.doodson_to_name_str( tt.dood[index, i] ))
+        for i in range(np.shape(self.dood[index, :])[0]):
+            names.append(self.doodson_to_name_str( self.dood[index, i] ))
 
         df['names'] = names
 
@@ -152,6 +153,7 @@ class dataset:
         # Remove rows with all zeros
         df = df.loc[(df != 0).any(axis=1)]
 
+        # Write data to file. Then add header info
         #filepath = Path('folder/subfolder/out.txt')
         filepath = Path(f'{label}.txt')
         filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -159,7 +161,7 @@ class dataset:
 
         with open(filepath, 'r') as original: data = original.read()
         with open(filepath, 'w') as modified:
-            modified.write(f'{label} src:inspect_data.py\n{tt.lat[index]}N {tt.lon[index]}E\nz0= {tt.dep[index]}\n' + data)
+            modified.write(f'{label} src:inspect_data.py\n{self.lat[index]}N {self.lon[index]}E\nz0= {self.dep[index]}\n' + data)
 
         return df
 
@@ -178,13 +180,14 @@ if __name__ == '__main__':
     pt = [-3.0183, 53.45] # gladstone
     pt = [-(2+(56 +6.93/60)/60), 56+(12+44.20/60)/60 ] # lower largo
 
-    # initialise
+    # initialise dataset with data loaded
     tt = dataset()
 
     # find nearest location
     distance, index = tt.find_nearest(lon=pt[0], lat=pt[1])
-    print(f'distance: {distance}')  # <-- The distances to the nearest neighbors
-    print(f'index: {index}')  # <-- The locations of the neighbors
+    print(f'Input location: {pt[1]}N, {pt[0]}E'.format('%.1f'))
+    print(f'Nearest distance: {distance}'.format('0.1f'))  # <-- The distances to the nearest neighbors
+    print(f'has index: {index}')  # <-- The locations of the neighbors
 
     # Plot data base + station
     tt.plot_database(pt=pt)
