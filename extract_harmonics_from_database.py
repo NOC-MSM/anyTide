@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Union
 from pathlib import Path
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
 from NOCtidepred import set_names_phases
 
 
@@ -81,14 +83,31 @@ class dataset:
         else: return 0  # Don't return a name for zero index
 
 
-    def plot_database(self, ds = None, pt = None):
+    def plot_database(self, ds = None, pt = None, index = None):
+        """ plot map of database locations. Highlight pt if specified """
         if ds == None:
             ds = self
-        plt.plot( ds.lon, ds.lat, 'r.')
+
+        fig, ax = plt.subplots(1, 1, figsize=[5.5, 5.5])
+
+        # Create inset of width 1.3 inches and height 0.9 inches
+        # at the default upper right location
+        axins = inset_axes(ax, width=1.3, height=0.9)
+
+        ax.plot( ds.lon, ds.lat, 'k.')
+        if index is not None:
+            ax.plot(ds.lon[index], ds.lat[index], 'ro')
+
+        # if point is given, plot zoom and show whole region as inset
         if pt is not None:
-            plt.plot(pt[0], pt[1], 'k+')
-            plt.xlim([pt[0]-0.1, pt[0]+0.1])
-            plt.ylim([pt[1]-0.1, pt[1]+0.1])
+            ax.plot(pt[0], pt[1], 'r+')
+            ax.set_xlim([pt[0]-0.1, pt[0]+0.1])
+            ax.set_ylim([pt[1]-0.1, pt[1]+0.1])
+            # Add inset for whole region
+            axins.plot( ds.lon, ds.lat, 'k.')
+            axins.plot(pt[0], pt[1], 'r+')
+            # Turn ticklabels of inset off
+            axins.tick_params(labelleft=False, labelbottom=False)
 
         plt.show()
 
@@ -161,7 +180,7 @@ class dataset:
 
         with open(filepath, 'r') as original: data = original.read()
         with open(filepath, 'w') as modified:
-            modified.write(f'{label} src:inspect_data.py\n{self.lat[index]}N {self.lon[index]}E\nz0= {self.dep[index]}\n' + data)
+            modified.write(f'{label} src:extract_harmonics_from_database.py\n{self.lat[index]}N {self.lon[index]}E\nz0= {self.dep[index]}\n' + data)
 
         return df
 
@@ -190,7 +209,7 @@ if __name__ == '__main__':
     print(f'has index: {index}')  # <-- The locations of the neighbors
 
     # Plot data base + station
-    tt.plot_database(pt=pt)
+    tt.plot_database(pt=pt, index=index)
 
     # Write txt file
     stn = tt.save_station_harmonics_txt(index)
